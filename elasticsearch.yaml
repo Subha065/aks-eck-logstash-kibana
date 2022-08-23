@@ -8,9 +8,7 @@ spec:
   - name: default
     count: 3
     config:
-      node.master: true
-      node.data: true
-      node.ingest: true
+      node.roles: ["data", "ingest", "master"]
       node.store.allow_mmap: false
     volumeClaimTemplates:
     - metadata:
@@ -20,5 +18,10 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 30Gi
+            storage: 40Gi
         storageClassName: default
+  http:
+    service:
+      spec:
+        # expose this cluster Service with a LoadBalancer
+        type: LoadBalancer

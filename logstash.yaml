@@ -18,14 +18,20 @@ spec:
         app.kubernetes.io/component: logstash
     spec:
       containers:
-        - name: logstash
-          image: docker.elastic.co/logstash/logstash:8.3.0
-          ports:
-            - name: "tcp-beats"
-              containerPort: 5044
-          env:
+      - name: logstash
+        image: docker.elastic.co/logstash/logstash:8.3.3
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            memory: 256Mi
+            cpu: "0.2"
+        ports:
+            - containerPort: 5044
+        env:
             - name: ES_HOSTS
-              value: "https://elasticsearch-es-http.logging.svc:9200"
+              value: "https://elasticsearch-es-http:9200"
             - name: ES_USER
               value: "elastic"
             - name: ES_PASSWORD
@@ -33,24 +39,31 @@ spec:
                 secretKeyRef:
                   name: elasticsearch-es-elastic-user
                   key: elastic
-          volumeMounts:
+        volumeMounts:
             - name: config-volume
               mountPath: /usr/share/logstash/config
-            - name: pipeline-volume
+            - name: logstash-pipeline-volume
               mountPath: /usr/share/logstash/pipeline
-            - name: ca-certs
-              mountPath: /etc/logstash/certificates
-              readOnly: true
-      volumes:
-        - name: config-volume
-          configMap:
-            name: logstash-config
-        - name: pipeline-volume
-          configMap:
-            name: logstash-pipeline
-        - name: ca-certs
-          secret:
-            secretName: elasticsearch-es-http-certs-public
+            - name: cert-ca
+              mountPath: "/etc/logstash/certificates"
+              readOnly: true 
+      volumes: 
+            - name: config-volume
+              configMap:
+                name: logstash-configmap
+                items:
+                  - key: logstash.yml
+                    path: logstash.yml
+            - name: logstash-pipeline-volume
+              configMap:
+                name: logstash-configmap
+                items:
+                  - key: logstash.conf
+                    path: logstash.conf
+            - name: cert-ca
+              secret:
+                secretName: elasticsearch-es-http-certs-public
+            
  
 ---
  

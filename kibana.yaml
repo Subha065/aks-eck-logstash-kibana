@@ -7,32 +7,32 @@ spec:
   count: 1
   elasticsearchRef:
     name: elasticsearch
+   # secureSettings:
+    #- secretName: kibana-saved-objects-encrypted-key
   http:
-    tls:
-      selfSignedCertificate:
-        disabled: true
- 
----
- 
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: kibana
-  namespace: logging
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: kibana.20.76.198.255.nip.io
-    http:
-      paths:
-      - backend:
-          service:
-            name: kibana-kb-http
-            port:
-              number: 5601
-        path: /
-        pathType: Prefix
-  # tls:
-  # - hosts:
-  #   - host-name
-  #   secretName: tls-secret-name
+    service:
+      spec:
+        type: LoadBalancer
+        ports:
+        - name: https
+          protocol: TCP
+          port: 443
+          targetPort: 5601
+    #tls:
+      #selfSignedCertificate:
+        #subjectAltNames:
+        #- ip: 192.168.0.1
+        #- dns: example.com
+  # this shows how to customize the Kibana pod
+  # with labels and resource limits
+  podTemplate:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+      - name: kibana
+        resources:
+          limits:
+            memory: 1Gi
+            cpu: 1

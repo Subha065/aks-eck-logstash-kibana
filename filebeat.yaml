@@ -33,7 +33,7 @@ spec:
             - equals:
                 kubernetes.namespace: "elastic-system"
     output.logstash:
-      hosts: ["logstash.logging.svc:5044"]
+      hosts: ["logstash:5044"]
   daemonSet:
     podTemplate:
       spec:
@@ -85,38 +85,39 @@ spec:
 ---
  
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: filebeat
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: filebeat
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: filebeat
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: filebeat
+  labels:
+    app: filebeat
 rules:
 - apiGroups: [""] # "" indicates the core API group
   resources:
   - namespaces
   - pods
-  - nodes
   verbs:
   - get
   - watch
   - list
- 
 ---
- 
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: filebeat
-subjects:
-- kind: ServiceAccount
-  name: filebeat
-  namespace: logging
-roleRef:
-  kind: ClusterRole
-  name: filebeat
-  apiGroup: rbac.authorization.k8s.io
- 
----
- 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: filebeat
+  labels:
+    app: filebeat
+---
